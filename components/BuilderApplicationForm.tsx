@@ -319,60 +319,88 @@ const BuilderApplicationForm = () => {
   );
 
   const renderProjectHistory = () => (
-    <div className="space-y-8">
-      {formData.projects.map((project, index) => (
-        <div key={index} className="p-4 border rounded-lg space-y-4">
-          <h3 className="font-medium text-lg">Project {index + 1}</h3>
+    <>
+      <div className="space-y-8 mb-20">
+        {formData.projects.map((project, index) => (
+          <div key={index} className="p-4 border rounded-lg space-y-4">
+            <h3 className="font-medium text-lg">Project {index + 1}</h3>
+            
+            <FormField label="Project Location">
+              <TextInput
+                name={`project-${index}-location`}
+                value={project.location}
+                onChange={(e) => handleProjectChange(index, 'location', e.target.value)}
+                required
+              />
+            </FormField>
+            
+            <FormField label="Square Footage">
+              <TextInput
+                name={`project-${index}-squareFootage`}
+                value={project.squareFootage}
+                onChange={(e) => handleProjectChange(index, 'squareFootage', e.target.value)}
+                type="number"
+                required
+              />
+            </FormField>
+            
+            <FormField label="Completion Date">
+              <TextInput
+                name={`project-${index}-completionDate`}
+                value={project.completionDate}
+                onChange={(e) => handleProjectChange(index, 'completionDate', e.target.value)}
+                type="date"
+                required
+              />
+            </FormField>
+            
+            <FormField label="Project Value">
+              <TextInput
+                name={`project-${index}-projectValue`}
+                value={project.projectValue}
+                onChange={(e) => handleProjectChange(index, 'projectValue', e.target.value)}
+                required
+              />
+            </FormField>
+            
+            <FormField label="Reference Contact">
+              <TextInput
+                name={`project-${index}-referenceContact`}
+                value={project.referenceContact}
+                onChange={(e) => handleProjectChange(index, 'referenceContact', e.target.value)}
+                required
+              />
+            </FormField>
+          </div>
+        ))}
+      </div>
+      
+      <div className="sticky bottom-0 left-0 right-0 bg-white border-t p-4 z-10">
+        <div className="flex justify-between max-w-4xl mx-auto">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              setCurrentStep(3);
+            }}
+            className="px-5 py-2.5 bg-gray-500 text-white rounded-full text-sm font-medium hover:bg-gray-600 transition-colors"
+          >
+            Previous
+          </button>
           
-          <FormField label="Project Location">
-            <TextInput
-              name={`project-${index}-location`}
-              value={project.location}
-              onChange={(e) => handleProjectChange(index, 'location', e.target.value)}
-              required
-            />
-          </FormField>
-          
-          <FormField label="Square Footage">
-            <TextInput
-              name={`project-${index}-squareFootage`}
-              value={project.squareFootage}
-              onChange={(e) => handleProjectChange(index, 'squareFootage', e.target.value)}
-              type="number"
-              required
-            />
-          </FormField>
-          
-          <FormField label="Completion Date">
-            <TextInput
-              name={`project-${index}-completionDate`}
-              value={project.completionDate}
-              onChange={(e) => handleProjectChange(index, 'completionDate', e.target.value)}
-              type="date"
-              required
-            />
-          </FormField>
-          
-          <FormField label="Project Value">
-            <TextInput
-              name={`project-${index}-projectValue`}
-              value={project.projectValue}
-              onChange={(e) => handleProjectChange(index, 'projectValue', e.target.value)}
-              required
-            />
-          </FormField>
-          
-          <FormField label="Reference Contact">
-            <TextInput
-              name={`project-${index}-referenceContact`}
-              value={project.referenceContact}
-              onChange={(e) => handleProjectChange(index, 'referenceContact', e.target.value)}
-              required
-            />
-          </FormField>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              setCurrentStep(5);
+            }}
+            className="px-5 py-2.5 bg-blue-500 text-white rounded-full text-sm font-medium hover:bg-blue-600 transition-colors ml-auto"
+          >
+            Next
+          </button>
         </div>
-      ))}
-    </div>
+      </div>
+    </>
   );
 
   const renderBuildingStandards = () => (
