@@ -480,7 +480,7 @@ const BuilderApplicationForm = () => {
               {renderStepContent()}
             </div>
 
-            <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 sm:relative sm:bg-transparent sm:border-t-0 sm:p-0 sm:mt-6">
+            <div className="sticky bottom-0 left-0 right-0 bg-white border-t p-4 z-10 sm:relative sm:bg-transparent sm:border-t-0 sm:p-0 sm:mt-6">
               <div className="flex justify-between max-w-4xl mx-auto">
                 {currentStep > 1 && (
                   <button
