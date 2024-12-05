@@ -92,7 +92,12 @@ export async function POST(
 
     // Send email notification
     await sgMail.send({
-      to: 'mitchell@barnhaussteelbuilders.com',
+      to: [
+        'mitchell@barnhaussteelbuilders.com',
+        'michael@barnhaussteelbuilders.com',
+        'larry@barnhaussteelbuilders.com',
+        'shannon@barnhaussteelbuilders.com'
+      ],
       from: 'mitchell@barnhaussteelbuilders.com',
       subject: `New Builder Application: ${formData.legalBusinessName}`,
       html: emailHtml,

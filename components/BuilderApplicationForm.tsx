@@ -429,7 +429,7 @@ const BuilderApplicationForm = () => {
           <div className="flex flex-col items-center">
             <div className="relative h-12 w-40 sm:h-16 sm:w-48">
               <Image
-                src="/Logo.PNG"
+                src="/Logo.png"
                 alt="Barnhaus Steel Builders Logo"
                 fill
                 priority
@@ -485,17 +485,23 @@ const BuilderApplicationForm = () => {
                 {currentStep > 1 && (
                   <button
                     type="button"
-                    onClick={() => setCurrentStep(currentStep - 1)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setCurrentStep(currentStep - 1);
+                    }}
                     className="px-5 py-2.5 bg-gray-500 text-white rounded-full text-sm font-medium hover:bg-gray-600 transition-colors"
                   >
                     Previous
                   </button>
                 )}
-                
+    
                 {currentStep < 5 ? (
                   <button
                     type="button"
-                    onClick={() => setCurrentStep(currentStep + 1)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setCurrentStep(currentStep + 1);
+                    }}
                     className="px-5 py-2.5 bg-blue-500 text-white rounded-full text-sm font-medium hover:bg-blue-600 transition-colors ml-auto"
                   >
                     Next
