@@ -1,17 +1,10 @@
 import { NextResponse } from 'next/server';
-import { MongoClient, ServerApiVersion } from 'mongodb';
-import sgMail from '@sendgrid/mail';
+import { createClient } from '@supabase/supabase-js';
 
-sgMail.setApiKey(process.env.SENDGRID_API_KEY as string);
-
-const uri = process.env.MONGODB_URI as string;
-const client = new MongoClient(uri, {
-  serverApi: {
-    version: ServerApiVersion.v1,
-    strict: true,
-    deprecationErrors: true,
-  }
-});
+// Initialize Supabase
+const supabaseUrl = process.env.SUPABASE_URL as string;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY as string;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 interface Project {
   location: string;
@@ -21,100 +14,85 @@ interface Project {
   referenceContact: string;
 }
 
-function formatCheckboxSection(data: Record<string, boolean>, title: string) {
-  const selectedItems = Object.entries(data)
-    .filter(([, value]) => value)
-    .map(([key]) => key.replace(/([A-Z])/g, ' $1').trim())
-    .join(', ');
-  
-  return selectedItems.length > 0 ? 
-    `<p><strong>${title}:</strong> ${selectedItems}</p>` : 
-    `<p><strong>${title}:</strong> None selected</p>`;
-}
-
-export async function POST(
-  request: Request
-): Promise<NextResponse> {
+export async function POST(request: Request): Promise<NextResponse> {
   try {
-    const formData = await request.json();
-
-    await client.connect();
-    const db = client.db("builder-applications");
+    console.log('Starting builder application submission...');
     
-    const result = await db.collection('submissions').insertOne({
-      ...formData,
-      submittedAt: new Date()
-    });
+    const formData = await request.json();
+    console.log('Form data received');
 
-    // Create comprehensive email HTML
-    const emailHtml = `
-      <h1>New Builder Network Application</h1>
-      
-      <h2>Company Information</h2>
-      <p><strong>Legal Business Name:</strong> ${formData.legalBusinessName}</p>
-      <p><strong>DBA:</strong> ${formData.dba || 'N/A'}</p>
-      <p><strong>Years in Business:</strong> ${formData.yearsInBusiness}</p>
-      <p><strong>Contractor's License:</strong> ${formData.contractorLicense}</p>
-      <p><strong>Federal Tax ID:</strong> ${formData.federalTaxId}</p>
-      
-      <h2>Principal Contact</h2>
-      <p><strong>Name:</strong> ${formData.contactName}</p>
-      <p><strong>Title:</strong> ${formData.contactTitle}</p>
-      <p><strong>Phone:</strong> ${formData.contactPhone}</p>
-      <p><strong>Email:</strong> ${formData.contactEmail}</p>
-      <p><strong>Address:</strong> ${formData.businessAddress}</p>
-      <p><strong>City/State/ZIP:</strong> ${formData.cityStateZip}</p>
-      
-      <h2>Experience & Expertise</h2>
-      <p><strong>Steel Frame Experience:</strong> ${formData.steelFrameExperience} years</p>
-      <p><strong>Barndominiums Completed:</strong> ${formData.barndominiumsCompleted}</p>
-      ${formatCheckboxSection(formData.expertise, 'Areas of Expertise')}
-      
-      <h2>Project History</h2>
-      ${(formData.projects as Project[]).map((project: Project, index: number) => `
-        <h3>Project ${index + 1}</h3>
-        <p><strong>Location:</strong> ${project.location}</p>
-        <p><strong>Square Footage:</strong> ${project.squareFootage}</p>
-        <p><strong>Completion Date:</strong> ${project.completionDate}</p>
-        <p><strong>Project Value:</strong> ${project.projectValue}</p>
-        <p><strong>Reference Contact:</strong> ${project.referenceContact}</p>
-      `).join('')}
-      
-      <h2>Building Standards</h2>
-      ${formatCheckboxSection(formData.buildingStandards, 'Building Standards & Practices')}
-      
-      <h2>Additional Information</h2>
-      <p>${formData.additionalInfo || 'No additional information provided.'}</p>
+    // Validate required fields
+    if (!formData.legalBusinessName || !formData.contactName || !formData.contactEmail) {
+      return NextResponse.json(
+        { success: false, message: 'Legal business name, contact name, and contact email are required' },
+        { status: 400 }
+      );
+    }
 
-      <p><strong>Database ID:</strong> ${result.insertedId}</p>
-      <p><em>Submitted at: ${new Date().toLocaleString()}</em></p>
-    `;
+    console.log('Saving to Supabase database...');
+    const { data, error } = await supabase
+      .from('builder_applications')
+      .insert([
+        {
+          // Company Information
+          legal_business_name: formData.legalBusinessName,
+          dba: formData.dba,
+          years_in_business: formData.yearsInBusiness,
+          contractor_license: formData.contractorLicense,
+          federal_tax_id: formData.federalTaxId,
+          
+          // Principal Contact
+          contact_name: formData.contactName,
+          contact_title: formData.contactTitle,
+          contact_phone: formData.contactPhone,
+          contact_email: formData.contactEmail,
+          business_address: formData.businessAddress,
+          city_state_zip: formData.cityStateZip,
+          
+          // Experience & Expertise
+          steel_frame_experience: formData.steelFrameExperience,
+          barndominiums_completed: formData.barndominiumsCompleted,
+          expertise: formData.expertise,
+          
+          // Project History
+          projects: formData.projects,
+          
+          // Building Standards
+          building_standards: formData.buildingStandards,
+          
+          // Additional Information
+          additional_info: formData.additionalInfo,
+          
+          submitted_at: new Date().toISOString()
+        }
+      ])
+      .select();
 
-    // Send email notification
-    await sgMail.send({
-      to: [
-        'mitchell@barnhaussteelbuilders.com',
-        'michael@barnhaussteelbuilders.com',
-        'larry@barnhaussteelbuilders.com',
-        'shannon@barnhaussteelbuilders.com'
-      ],
-      from: 'mitchell@barnhaussteelbuilders.com',
-      subject: `New Builder Application: ${formData.legalBusinessName}`,
-      html: emailHtml,
-    });
+    if (error) {
+      console.error('Supabase error:', error);
+      return NextResponse.json(
+        { success: false, message: 'Failed to save application data' },
+        { status: 500 }
+      );
+    }
+
+    console.log('Database insertion complete');
+    console.log('Builder application submitted successfully');
 
     return NextResponse.json({ 
       success: true, 
-      message: 'Application submitted successfully' 
+      message: 'Application submitted successfully! We will review your application and contact you soon.',
+      id: data[0].id
     });
 
-  } catch (error) {
-    console.error('Submission error:', error);
+  } catch (error: unknown) {
+    console.error('Detailed server error:', error);
     return NextResponse.json(
-      { success: false, message: 'Error submitting application' },
+      { 
+        success: false, 
+        message: `Error submitting application: ${error instanceof Error ? error.message : 'Unknown error occurred'}` 
+      },
       { status: 500 }
     );
-  } finally {
-    await client.close();
   }
 }
