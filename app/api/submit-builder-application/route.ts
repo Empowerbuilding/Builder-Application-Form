@@ -44,14 +44,6 @@ export async function POST(request: Request): Promise<NextResponse> {
       );
     }
 
-    if (!contactEmail) {
-      console.log('Validation failed: Missing contact email');
-      return NextResponse.json(
-        { success: false, message: 'Contact email is required' },
-        { status: 400 }
-      );
-    }
-
     console.log('Validation passed, preparing data for Supabase...');
 
     // Prepare data for insertion
